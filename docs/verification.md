@@ -6,7 +6,7 @@ Implementation was delegated to GPT-6 Luna workers; an independent GPT-6 Astra r
 
 ## Executed checks
 
-- Backend: `backend/.venv/bin/python -m pytest backend/tests -q` — 28 tests passed. Dependency deprecation warnings remain; no failing tests.
+- Backend: `backend/.venv/bin/python -m pytest backend/tests -q` — 34 tests passed, including Developer API/Vertex selection, missing credentials, both classification and explanation paths, and ambient SDK backend flags. Dependency deprecation warnings remain; no failing tests.
 - Python modules: `python -m compileall -q backend/app` — passed.
 - Frontend: `npm run check:copy` — contextual probability wording and simulator action checks passed.
 - Frontend: `npm run build` — TypeScript and Vite production build passed.
@@ -28,9 +28,10 @@ Implementation was delegated to GPT-6 Luna workers; an independent GPT-6 Astra r
 - Explicit auth handling, single-process deployment limits, per-session limits, and provider timeouts are documented.
 - Simulator acknowledgment does not clear Verify or permit continued payment; displayed outcomes are explicitly local simulation state.
 - The frontend copy-check command uses a TypeScript-supported module resolution mode.
+- Developer API selection explicitly passes `vertexai=False`, preventing ambient Vertex/enterprise SDK flags from redirecting requests to Vertex. Regression tests construct the installed SDK client without making network calls.
 
 ## Unverified external paths
 
-No live Jev or Vertex AI call was performed. A Google Cloud project ID/region and local authentication have not been supplied. No PostgreSQL instance, Docker build, or Cloud Run deployment was available for execution. Those configuration/integration paths exist but must not be described as verified production support.
+No live Jev, Vertex AI, or Gemini Developer API call was performed. A read-only Brave inspection found an existing AI Studio project labeled Free tier with an existing API key. Credentials have not been copied into the app. No PostgreSQL instance, Docker build, or Cloud Run deployment was available for execution. Those configuration/integration paths exist but must not be described as verified production support.
 
 The running local demo uses fixture classification and deterministic explanations with SQLite. All input records are synthetic; no real payment is executed.

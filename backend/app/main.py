@@ -8,6 +8,7 @@ from fastapi import Cookie, Depends, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from .config import get_settings
+from .config import validate_gemini_config
 from .providers import GeminiProvider, JevProvider
 from .repository import Repository
 from .schemas import AssessmentRequest
@@ -26,6 +27,10 @@ login_attempts: dict[str, list[float]] = {}
 def startup():
     if settings.context_provider not in {"jev", "gemini"}:
         raise RuntimeError("CONTEXT_PROVIDER must be jev or gemini")
+    try:
+        validate_gemini_config(settings)
+    except ValueError as exc:
+        raise RuntimeError(str(exc)) from exc
     if settings.access_code and (settings.session_secret == "local-demo-secret-change-me" or len(settings.session_secret) < 32):
         raise RuntimeError("Protected sessions require SESSION_SECRET with at least 32 characters")
     is_managed = bool(os.environ.get("K_SERVICE")) or settings.environment.casefold() == "production"

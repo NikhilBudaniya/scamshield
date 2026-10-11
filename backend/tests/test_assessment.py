@@ -12,7 +12,7 @@ from app.rules import evaluate_rules
 from app.schemas import AssessmentRequest
 from app.seed import SCENARIOS, DEMO_TIME
 from app.service import AssessmentService
-from app.config import Settings
+from app.config import Settings, validate_gemini_config
 import app.providers as providers_module
 from app.evaluation import examples
 
@@ -230,6 +230,106 @@ def test_gemini_explanation_actions_and_quotes_are_grounded():
     assert '"transfer funds safely"' not in result.summary
     assert result.next_step.startswith("Pause this simulated payment")
     assert "IN99" in result.summary and "IN88" in result.summary
+
+
+def test_gemini_developer_backend_requires_an_api_key(monkeypatch):
+    from app.providers import _client
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        Settings(gemini_backend="unknown")
+    cfg = settings(gemini_backend="developer", gemini_api_key=None, google_cloud_project=None)
+    with pytest.raises(RuntimeError, match="gemini_api_key_missing"):
+        _client(cfg)
+    with pytest.raises(ValueError, match="GEMINI_API_KEY"):
+        validate_gemini_config(settings(gemini_mode="live", gemini_backend="developer", google_cloud_project="irrelevant"))
+    validate_gemini_config(settings(gemini_mode="fixture", gemini_backend="developer", google_cloud_project=None))
+    with pytest.raises(ValueError, match="GOOGLE_CLOUD_PROJECT"):
+        validate_gemini_config(settings(gemini_mode="live", gemini_backend="vertex", google_cloud_project=None, gemini_api_key="irrelevant"))
+    validate_gemini_config(settings(gemini_mode="live", gemini_backend="developer", gemini_api_key="test-only-key", google_cloud_project=None))
+
+
+def test_gemini_client_factory_selects_explicit_backends(monkeypatch):
+    from google import genai
+    from app.providers import _client
+
+    constructions = []
+    sentinel = object()
+    monkeypatch.setattr(genai, "Client", lambda **kwargs: constructions.append(kwargs) or sentinel)
+
+    developer = settings(gemini_backend="developer", gemini_api_key="test-only-key", google_cloud_project=None)
+    assert _client(developer) is sentinel
+    assert constructions[-1] == {"api_key": "test-only-key", "vertexai": False}
+
+    vertex = settings(gemini_backend="vertex", google_cloud_project="synthetic-project", google_cloud_location="us-central1")
+    assert _client(vertex) is sentinel
+    assert constructions[-1] == {"vertexai": True, "project": "synthetic-project", "location": "us-central1"}
+
+
+@pytest.mark.parametrize("flag", ["GOOGLE_GENAI_USE_VERTEXAI", "GOOGLE_GENAI_USE_ENTERPRISE"])
+def test_developer_backend_ignores_ambient_vertex_flags(monkeypatch, flag):
+    from app.providers import _client
+
+    for name in ("GOOGLE_GENAI_USE_VERTEXAI", "GOOGLE_GENAI_USE_ENTERPRISE"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv(flag, "true")
+    cfg = settings(gemini_backend="developer", gemini_api_key="non-secret-test-placeholder", google_cloud_project=None)
+    client = _client(cfg)
+    try:
+        api_client = client._api_client
+        assert api_client.vertexai is False
+        assert api_client._http_options.base_url == "https://generativelanguage.googleapis.com/"
+    finally:
+        client.close()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("backend", ["developer", "vertex"])
+async def test_gemini_classifier_and_explainer_use_selected_backend(monkeypatch, backend):
+    from google import genai
+
+    constructions = []
+
+    class FakeModels:
+        async def generate_content(self, **kwargs):
+            schema = kwargs["config"].response_schema
+            if schema.__name__ == "ContextScores":
+                data = {key: 0.0 for key in ("impersonation", "safe_account", "urgency", "secrecy", "upfront_fee", "bypass_verification")}
+            else:
+                data = {"ordered_signal_codes": [], "ordered_missing_checks": []}
+            return SimpleNamespace(text=json.dumps(data))
+
+    class FakeAio:
+        models = FakeModels()
+
+        async def aclose(self):
+            pass
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            constructions.append(kwargs)
+            self.aio = FakeAio()
+
+    monkeypatch.setattr(genai, "Client", FakeClient)
+    config = {"gemini_backend": backend, "gemini_mode": "live"}
+    if backend == "developer":
+        config["gemini_api_key"] = "test-only-key"
+        config["google_cloud_project"] = None
+    else:
+        config["google_cloud_project"] = "synthetic-project"
+    provider = GeminiProvider(settings(**config))
+    request = request_from(SCENARIOS[0])
+    classified = await provider.classify_context(request)
+    assert classified.status == "live"
+    assert classified.model == provider.settings.gemini_model
+    mode, explanation = await provider.explain({"recommendation": "review", "signals": [], "missing_data": []})
+    assert mode == "live" and explanation.next_step.startswith("Pause")
+    expected = {"api_key": "test-only-key", "vertexai": False} if backend == "developer" else {
+        "vertexai": True,
+        "project": "synthetic-project",
+        "location": "global",
+    }
+    assert constructions == [expected, expected]
 
 
 def test_amount_rule_marks_insufficient_same_currency_history(monkeypatch):

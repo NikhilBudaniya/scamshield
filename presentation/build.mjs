@@ -130,9 +130,9 @@ function slide() {
   const s = slide(); header(s, '04', 'Keep evidence, policy and explanation separate', 'Each stage has a bounded job. Model output cannot authorize or execute a payment.');
   const rows = [
     { n: '01', label: 'ADAPTERS', main: 'UPI transfer  /  Vendor invoice', sub: 'Validate fields and normalize the request', color: C.ink },
-    { n: '02', label: 'EVIDENCE', main: 'Rules  +  optional context classification', sub: 'Jev or Gemini on Vertex AI, selected by configuration', color: C.green },
+    { n: '02', label: 'EVIDENCE', main: 'Rules  +  optional context classification', sub: 'Gemini Developer API; Vertex AI remains optional', color: C.green },
     { n: '03', label: 'POLICY', main: 'Continue  /  Verify  /  Review', sub: 'Versioned thresholds map evidence to a recommendation', color: C.ink },
-    { n: '04', label: 'EXPLANATION', main: 'Vertex AI Gemini summary', sub: 'Separate call after the decision is stored; fallback on failure', color: C.green },
+    { n: '04', label: 'EXPLANATION', main: 'Gemini explanation', sub: 'Separate optional call; deterministic fallback on failure', color: C.green },
   ];
   let y = 243;
   for (const row of rows) {
@@ -143,10 +143,10 @@ function slide() {
     rule(s, 144, y + 78, 994, C.line, 1);
     y += 96;
   }
-  tx(s, 'NOW', 72, 635, 61, 18, 11, C.green, { bold: true });
-  tx(s, 'Synthetic records  /  fixture mode available  /  integrations configurable and unverified', 144, 631, 980, 25, 14, C.muted);
-  footer(s, 'Proposed architecture  /  Provider calls remain on the backend');
-  s.speakerNotes.text = 'Context classification is configurable: Jev or Gemini on Vertex AI. Gemini explanation remains a separate call after the recommendation is stored. Fixture mode supports a reproducible offline demonstration. Live providers and deployment are unverified. Source: approved design specification, sections “Architecture” and “Model boundaries and resilience”, with the project integration clarification that Google Cloud Gemini classification is supported and Jev is optional.';
+  tx(s, 'HACKATHON PATH', 72, 635, 100, 18, 11, C.green, { bold: true });
+  tx(s, 'Local app + SQLite + Gemini Developer API free tier. Vertex AI and Cloud Run stay optional.', 190, 631, 950, 25, 14, C.muted);
+  footer(s, 'Fixture default  /  Gemini live calls unverified  /  Provider calls stay on backend');
+  s.speakerNotes.text = 'The live classifier can use Gemini Developer API by configuration; Vertex AI remains optional. Gemini explanation is a separate, optional operation after the recommendation is stored. The hackathon path is a local app with SQLite and the Gemini Developer API free tier. Cloud Run and Vertex AI are optional extensions; usage can incur charges. Default remains fixture mode, live calls are unverified, and no paid services are provisioned. Google’s current pricing documentation lists free input and output for standard Gemini 2.5 Flash and Flash-Lite, subject to rate limits, and says free-tier content may be used to improve Google products. Use synthetic data with the free tier. Source: https://ai.google.dev/gemini-api/docs/pricing; approved design specification, sections “Architecture” and “Model boundaries and resilience”; current project integration configuration.';
 }
 
 // 5 — Demo and evaluation
@@ -191,8 +191,8 @@ function slide() {
   tx(s, 'Simulators and investigation view', 72, 418, 520, 29, 22, C.ink, { bold: true });
   tx(s, 'Consumer transfer, invoice payment, case history and recorded evidence.', 72, 458, 480, 53, 16, C.muted);
   rule(s, 72, 532, 480, C.line, 1);
-  tx(s, 'Provider integrations', 72, 554, 440, 28, 22, C.ink, { bold: true });
-  tx(s, 'Configure Gemini classification and explanation separately; Jev remains optional.', 72, 592, 475, 42, 15, C.muted);
+  tx(s, 'Local setup', 72, 554, 440, 28, 22, C.ink, { bold: true });
+  tx(s, 'Gemini Developer API free tier for Flash or Flash-Lite. Rate limits apply; use synthetic inputs.', 72, 592, 500, 48, 13, C.muted, { lineSpacing: 1.14 });
   rule(s, 648, 244, 1, 369, C.line, 1);
   tx(s, 'NEXT 24 HOURS  /  BUFFER', 702, 244, 400, 20, 12, C.amber, { bold: true });
   tx(s, 'Held-out evaluation', 702, 282, 430, 29, 22, C.ink, { bold: true });
@@ -203,8 +203,8 @@ function slide() {
   rule(s, 702, 532, 436, C.green, 2);
   tx(s, 'MVP boundary', 702, 554, 250, 26, 18, C.green, { bold: true });
   tx(s, 'Synthetic data. Simulated outcomes. No payment execution.', 702, 592, 442, 40, 15, C.ink);
-  footer(s, 'Next step: confirm provider access and begin with fixtures  /  Live integrations remain unverified');
-  s.speakerNotes.text = 'The schedule is a proposed delivery sequence, not a claim that implementation or deployment has completed. Cloud readiness requires integration checks against PostgreSQL and end-to-end flows. Optional invoice extraction is outside this first pitch scope. Source: approved design specification “Delivery sequence” and implementation plan “Presentation”.';
+  footer(s, 'No paid services provisioned  /  Vertex and Cloud Run optional; usage can incur charges');
+  s.speakerNotes.text = 'The schedule is a proposed delivery sequence, not a claim that implementation or deployment has completed. The local hackathon path uses SQLite and Gemini Developer API. Free tier availability is subject to rate limits and data-use terms; Google’s current documentation says free-tier content may be used to improve products, so use synthetic inputs. Vertex AI and Cloud Run are optional extensions and can incur charges. No paid services have been provisioned. Source: https://ai.google.dev/gemini-api/docs/pricing; approved design specification “Delivery sequence” and implementation plan “Presentation”.';
 }
 
 async function writeBlob(file, blob) {

@@ -22,29 +22,42 @@ Open [the local application](http://127.0.0.1:8000). The local launcher binds on
 
 For frontend development, run the backend and then `npm run dev` in `frontend`. Vite proxies `/api` to port 8000.
 
-## Google Cloud and Jev configuration
+## Free-first Gemini configuration
 
-Provider modes are independent. Set `CONTEXT_PROVIDER=gemini` and `GEMINI_MODE=live` for a Google Cloud-only AI demo with Gemini classification and explanations. Alternatively, keep `CONTEXT_PROVIDER=jev` and `JEV_MODE=fixture` to combine saved Jev examples with live Gemini explanations. The provider used for classification is explicit; this is not a silent fallback.
+For the hackathon, run FastAPI, the frontend, and SQLite locally, and use the **Gemini Developer API** with a key belonging to an AI Studio project labeled **Free tier**. Gemini 2.5 Flash currently has free input/output quota, subject to rate limits. A paid project's key does not become free by selecting a free-tier-capable model. Verify the project's billing tier in [AI Studio](https://aistudio.google.com/projects) before connecting it. Free-tier inputs may be used to improve Google products; keep this demo's synthetic data. See [Google's current pricing](https://ai.google.dev/gemini-api/docs/pricing).
+
+No Cloud SQL, BigQuery, Pub/Sub, Document AI, or cloud hosting is needed for this delivery. These remain possible extensions. Free quota is not a latency or availability guarantee; exhausted quota is reported as unavailable, with no fallback to another API backend.
 
 ```bash
 cp .env.example .env
-# Edit .env locally. Set GOOGLE_CLOUD_PROJECT and the region/model available to you.
+chmod 600 .env
+# Edit .env locally; never paste the key into chat or frontend code.
+# Set GEMINI_BACKEND=developer and GEMINI_API_KEY to your Free tier project's key.
+# Set GEMINI_MODE=live and CONTEXT_PROVIDER=gemini.
 # Set a private DEMO_ACCESS_CODE and a random SESSION_SECRET.
-# Set GEMINI_MODE=live and CONTEXT_PROVIDER=gemini for Google Cloud-only use.
+# Generate a session secret with: python3 -c 'import secrets; print(secrets.token_hex(32))'
+# Keep LOCAL_DEVELOPMENT=true and COOKIE_SECURE=false for local HTTP only.
 # Keep JEV_MODE=fixture until Jev access is available.
 set -a
 source .env
 set +a
+bash scripts/start-local.sh
 ```
 
-With the Google Cloud CLI installed, authenticate locally using Application Default Credentials:
+The Developer API path needs no Google Cloud CLI, project ID, or region in the app. `.env` is ignored by Git and loaded only when you explicitly source it. The API key stays on the backend. Default provider modes remain fixture so a fresh checkout makes no remote calls. Classification and explanation requests both use the selected Gemini backend.
+
+## Optional Vertex AI and Jev configuration
+
+Set `GEMINI_BACKEND=vertex`, `GOOGLE_CLOUD_PROJECT`, and the region/model available to you to use Vertex AI instead. With the Google Cloud CLI installed, authenticate locally using Application Default Credentials:
 
 ```bash
 gcloud auth application-default login
 gcloud auth application-default set-quota-project "$GOOGLE_CLOUD_PROJECT"
 ```
 
-The project must have billing, the Vertex AI API, and permission to invoke the selected model. Select a model available in your project/region. Cloud Run should use its attached service account rather than a downloaded key. Secrets belong in backend environment configuration or Secret Manager, never in frontend files.
+The Vertex project must have billing, the Vertex AI API, and permission to invoke the selected model. Vertex model usage is not the Gemini Developer API free tier. Select a model available in your project/region. Cloud Run should use its attached service account rather than a downloaded key. Secrets belong in backend environment configuration or Secret Manager, never in frontend files.
+
+Provider modes are independent. Set `CONTEXT_PROVIDER=gemini` and `GEMINI_MODE=live` for Gemini classification and explanations. Alternatively, keep `CONTEXT_PROVIDER=jev` and `JEV_MODE=fixture` to combine saved Jev examples with live Gemini explanations. Backend selection is explicit; there is no automatic Developer API/Vertex failover.
 
 To enable Jev later, set `JEV_MODE=live` and configure `JEV_API_KEY`. The classification deadline defaults to two seconds. Failed live calls are marked unavailable and trigger verification as appropriate; they are never silently replaced with a saved successful classification.
 
@@ -74,7 +87,9 @@ Simulator cancellation, continuation, and independent-check acknowledgment are b
 
 ## Deployment
 
-The `Dockerfile` builds the frontend and serves it alongside FastAPI. It honors Cloud Run's `PORT` variable. SQLite is appropriate for a local demo; its Cloud Run filesystem is ephemeral and does not provide shared persistence across instances. Use Cloud SQL/PostgreSQL for a persistent cloud demo.
+Local hosting is the recommended zero-hosting-cost path. Cloud Run offers limited free allowances, but requires billing and can incur charges; source builds and image storage have separate allowances. See [Cloud Run pricing](https://cloud.google.com/run/pricing). No cloud resources are provisioned by this repository.
+
+The `Dockerfile` builds the frontend and serves it alongside FastAPI. It honors Cloud Run's `PORT` variable. SQLite is appropriate for a local demo; its Cloud Run filesystem is ephemeral and does not provide shared persistence across instances. A persistent cloud database is an optional deployment expense, not a hackathon prerequisite.
 
 Build locally when Docker is available:
 

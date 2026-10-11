@@ -2,7 +2,7 @@
 
 Date: 2026-10-11
 
-Status: Agreed concept; written specification ready for review.
+Status: Approved for implementation by the user on 2026-10-11. Local prototype implemented; see implementation notes below.
 
 ## Objective
 
@@ -178,3 +178,11 @@ Start with a suspicious UPI transfer and show the exact contextual evidence. Swi
 ## Review outcome
 
 This document defines a single prototype with two adapters, not separate products. Its limits are explicit: synthetic records, provisional thresholds, a small evaluation set, and no payment execution. The next artifact is the implementation plan after written-spec review.
+
+## Implementation notes
+
+The local implementation and six-slide pitch were completed after user approval. The user has Google Cloud access but no Jev access, so the classifier is explicitly configurable as Jev or Gemini on Vertex AI. Fixture mode remains the default; no live provider call has been claimed.
+
+To keep generated explanations grounded, Gemini ranks recorded evidence codes and the server renders summary and next-step text from controlled templates. This replaces unconstrained explanation prose. Both demo adapters validate INR only; the shared contract remains extensible to additional currencies with appropriate historical data.
+
+Simulator outcome actions are browser-session-only. Verification acknowledgment leaves the recommendation unchanged; only `continue` cases permit simulated continuation. PostgreSQL, Cloud Run deployment, and live latency/model evaluation remain external validation steps. The local process, API, UI, and synthetic fixture policy evaluation are covered by the verification record in `docs/verification.md`.

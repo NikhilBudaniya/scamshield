@@ -8,7 +8,7 @@
 
 ## Form description
 
-ScamShield helps a person review invoice payment details before a simulated assessment. It extracts candidate fields from an invoice, asks the person to confirm them, then compares the destination account with a known vendor record and surfaces anomalies or missing checks. Deterministic policy returns Continue, Verify or Review with evidence. When requested, Gemini prioritizes saved evidence and deterministic templates render the explanation. The app does not move money. The public prototype uses Firebase anonymous authentication, Firestore, Cloud Run and Vertex AI Gemini 2.5 Flash-Lite. Two synthetic invoice flows completed live: a routine invoice returned Continue, while a changed destination with bypass language returned Review. Sample invoices are synthetic.
+ScamShield combines AI classification of invoice payment requests with deterministic transaction checks. Vertex AI Gemini 2.5 Flash-Lite extracts invoice fields and classifies impersonation, safe-account claims, urgency, secrecy, upfront fees and verification bypass. A person confirms the fields; rules check amount, history, vendor identity and destination account. Policy maps the evidence to Continue, Verify or Review. Gemini can order recorded evidence for explanations rendered by deterministic templates. Cloud Run hosts the application and API, Firebase provides anonymous authentication, and Firestore stores visitor-scoped cases and request quotas. Two synthetic invoice paths completed live: a routine invoice returned Continue and a changed destination returned Review. The prototype uses synthetic examples and moves no money.
 
 ## Submission requirements and current status
 
@@ -26,6 +26,10 @@ ScamShield helps a person review invoice payment details before a simulated asse
 ScamShield accepts a synthetic invoice, extracts candidate vendor, invoice, amount and destination fields, and waits for a person to review and confirm them. The assessment compares the confirmed destination with known vendor details and transaction evidence. Deterministic policy produces Continue, Verify or Review and retains the supporting signals and missing checks. When requested separately, Gemini prioritizes recorded evidence and deterministic templates render an explanation. The simulator moves no money.
 
 The deployed stack is a React and TypeScript client served with FastAPI on Cloud Run, Firebase anonymous authentication, Firestore for owner-scoped case records and quota state, and Vertex AI Gemini 2.5 Flash-Lite for extraction, context classification and evidence prioritization. Deterministic templates render requested explanations. The runtime restricts model attempts to 9 per user per day, 50 globally per day and 200 total. These are request limits, not billing caps.
+
+Jev is a candidate structured decision model for a low-latency classification path. The Jev adapter in the repository passes fixture tests, but it is disabled on the live GCP service and has no project latency or quality measurements. The roadmap is to benchmark it against Gemini on reviewed cases using p50/p95 latency, precision, recall, false-positive rate and calibration before considering activation. The adapter is based on TypeSafe's [Jev and System One model description](https://typesafe.ai/blog/introducing-system-one-models-and-jev).
+
+UK Finance's [Fraud Report 2026](https://www.ukfinance.org.uk/system/files/2026-06/UK%20Finance%20Fraud%20Report%202026.pdf), page 41, reports that UK invoice and mandate fraud in 2025 involved £41.3m in gross losses across 2,305 cases; 68% of lost value was on business and other non-personal accounts. Reported totals include value later recovered. These are UK invoice and mandate fraud figures, not a global estimate.
 
 ## Cost and data limits
 

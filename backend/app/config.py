@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     session_ttl_seconds: int = 60 * 60 * 12
     max_assessments_per_session: int = 100
     max_explanations_per_session: int = 100
+    max_active_sessions: int = Field(default=500, gt=0)
+    max_provider_calls_per_process: int = Field(default=200, gt=0, validation_alias="MAX_PROVIDER_CALLS_PER_PROCESS")
     jev_mode: str = "fixture"
     jev_api_key: str | None = None
     jev_model: str = "jev-1.13.0"
@@ -30,6 +32,19 @@ class Settings(BaseSettings):
     local_development: bool = False
     environment: str = "development"
     max_login_attempts_per_minute: int = 10
+    auth_mode: Literal["access_code", "firebase"] = Field(default="access_code", validation_alias="AUTH_MODE")
+    storage_backend: Literal["sqlite", "firestore"] = Field(default="sqlite", validation_alias="STORAGE_BACKEND")
+    firebase_project_id: str | None = Field(default=None, validation_alias="FIREBASE_PROJECT_ID")
+    firebase_api_key: str | None = Field(default=None, validation_alias="FIREBASE_API_KEY")
+    firebase_auth_domain: str | None = Field(default=None, validation_alias="FIREBASE_AUTH_DOMAIN")
+    firebase_app_id: str | None = Field(default=None, validation_alias="FIREBASE_APP_ID")
+    daily_model_limit_per_user: int = Field(default=9, gt=0, validation_alias="DAILY_MODEL_LIMIT_PER_USER")
+    daily_model_limit_global: int = Field(default=50, gt=0, validation_alias="DAILY_MODEL_LIMIT_GLOBAL")
+    total_model_limit_global: int = Field(default=200, gt=0, validation_alias="TOTAL_MODEL_LIMIT_GLOBAL")
+
+    @property
+    def effective_firebase_project_id(self) -> str | None:
+        return self.firebase_project_id or self.google_cloud_project
 
 
 def validate_gemini_config(settings: Settings) -> None:

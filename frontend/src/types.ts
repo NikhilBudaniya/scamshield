@@ -48,3 +48,52 @@ export interface CaseRecord {
 
 export interface ScenarioResponse { scenarios: Scenario[] }
 export interface AssessmentsResponse { assessments: CaseRecord[] }
+
+export interface AppConfig {
+  auth_mode: 'firebase' | 'access_code' | string
+  firebase_config: {
+    apiKey: string
+    authDomain: string
+    projectId: string
+    appId: string
+    [key: string]: string
+  } | null
+  storage_mode: string
+  synthetic_data: boolean
+}
+
+export interface InvoiceSample {
+  id: string
+  title: string
+  filename: string
+  download_url: string
+  description: string
+}
+
+export interface InvoiceSamplesResponse { samples: InvoiceSample[] }
+
+export interface KnownVendor {
+  vendor_id: string
+  vendor_name: string
+  customer_id: string
+  known_destination: string
+}
+
+export interface VendorsResponse { vendors: KnownVendor[] }
+
+export interface InvoiceExtraction {
+  extraction_id: string
+  provider_status: 'live' | 'fixture' | 'unavailable' | string
+  model: string | null
+  filename: string
+  fields: {
+    invoice_number: string | null
+    vendor_name: string | null
+    amount_minor: number | null
+    currency: string | null
+    destination_account: string | null
+    payment_instructions: string | null
+  }
+  warnings: string[]
+  requires_review: true
+}

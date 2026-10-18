@@ -132,6 +132,43 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 textarea { display: block; padding: 10px; min-height: 88px; line-height: 1.55; resize: vertical; }
 .context-meta { display: flex; align-items: center; justify-content: space-between; color: #98a096; font-size: 8px; margin-top: 7px; }
 .context-meta code, .signal-meta code, .case-id code { font: 8px var(--mono); color: #607a68; background: #eef2eb; border-radius: 3px; padding: 3px 5px; }
+.invoice-intake { border-color: #dbe2d7; background: linear-gradient(145deg, #fffefa, #f9faf5); }
+.sample-picker { border: 1px solid #e2e7dc; background: #f4f7f0; border-radius: 4px; padding: 10px; }
+.sample-label { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+.sample-spark { color: #4d8a65; font-size: 15px; }
+.sample-label strong, .sample-label small { display: block; }
+.sample-label strong { color: #3e5c49; font-size: 9px; }
+.sample-label small { color: #87958a; font-size: 8px; margin-top: 3px; }
+.sample-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 7px; align-items: center; }
+.sample-row .secondary-button { min-height: 37px; }
+.sample-description { margin: 8px 0 0; color: #829084; font-size: 8px; line-height: 1.45; }
+.upload-divider { display: flex; align-items: center; gap: 10px; color: #a1a89e; font: 7px var(--mono); letter-spacing: .7px; margin: 14px 0 9px; }
+.upload-divider::before, .upload-divider::after { content: ''; flex: 1; height: 1px; background: #e9e9e1; }
+.upload-zone { min-height: 59px; position: relative; display: flex; align-items: center; gap: 10px; border: 1px dashed #bdcfc0; border-radius: 4px; background: #fffefa; padding: 9px 11px; cursor: pointer; }
+.upload-zone:hover { border-color: #6e9c7c; background: #fafff9; }
+.upload-icon { width: 28px; height: 28px; border: 1px solid #dce7dc; border-radius: 4px; display: grid; place-items: center; color: #528063; font-size: 17px; }
+.upload-zone strong, .upload-zone small { display: block; }
+.upload-zone strong { max-width: 310px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #496052; font-size: 9px; font-weight: 600; }
+.upload-zone small { color: #98a197; font-size: 8px; margin-top: 4px; }
+.upload-zone input[type=file] { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.upload-zone:focus-within { outline: 3px solid #65a888; outline-offset: 3px; }
+.upload-selected { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #718074; font-size: 8px; margin-top: 9px; }
+.upload-selected .secondary-button { min-height: 30px; }
+.extraction-result { border-left: 2px solid #73a080; background: #f0f5ed; padding: 9px 10px; margin-top: 10px; }
+.extraction-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #76867a; font: 8px var(--mono); }
+.provider-tag { border-radius: 10px; padding: 4px 7px; color: #6c776d; background: #e5e9e1; font: 7px var(--mono); letter-spacing: .3px; white-space: nowrap; }
+.provider-tag.fixture { color: #80612b; background: #f4ead2; }
+.provider-tag.live { color: #256646; background: #deeee2; }
+.provider-tag.unavailable { color: #93473c; background: #f3e0db; }
+.extraction-result > p { color: #6f7d70; font-size: 8px; line-height: 1.4; margin: 8px 0 0; }
+.extraction-result ul { margin: 7px 0 0; padding-left: 16px; color: #8e7650; font-size: 8px; line-height: 1.5; }
+.privacy-note { color: #9aa298; font-size: 7px; line-height: 1.45; margin: 10px 1px 0; }
+.field-help { display: block; color: #9a9f96; font-size: 8px; line-height: 1.4; margin-top: 5px; }
+.firebase-reconnect { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 14px; margin-top: 14px; border: 1px solid #e1d4b9; background: #fbf5e8; color: #665a3e; border-radius: 4px; }
+.firebase-reconnect strong, .firebase-reconnect small { display: block; }
+.firebase-reconnect strong { font-size: 10px; }
+.firebase-reconnect small { color: #91856d; font-size: 8px; line-height: 1.45; margin-top: 4px; }
+.case-export { display: inline-flex; margin-top: 8px; min-height: 25px; }
 .form-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 4px 1px 0; }
 .form-footer > span { color: #8c958c; font-size: 9px; }
 .lock-icon { margin-right: 5px; color: #7d9986; font-size: 11px; }
@@ -290,6 +327,7 @@ textarea { display: block; padding: 10px; min-height: 88px; line-height: 1.55; r
 .modal-mark { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; background: #e8f1e9; color: #347052; font-size: 21px; margin-bottom: 16px; }
 .access-modal h2 { margin: 8px 0 7px; font: 500 24px var(--serif); color: #19332f; }
 .access-modal p { color: #7c887d; font-size: 10px; line-height: 1.55; margin: 0 0 18px; }
+.access-modal .access-error { color: #9a483e; background: #fbf0ec; border: 1px solid #ecd1cb; padding: 8px 9px; border-radius: 3px; margin: -5px 0 13px; }
 .access-modal .primary-button { width: 100%; margin-top: 15px; }
 
 @media (min-width: 1600px) { .content-wrap { padding-left: 56px; padding-right: 56px; } .workspace-grid { gap: 42px; } }

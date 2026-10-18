@@ -12,3 +12,5 @@ artifacts
 presentation
 .local
 test-results
+
+**/.test-build

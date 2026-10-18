@@ -54,7 +54,7 @@ class AssessmentRequest(StrictModel):
         if self.use_case == "consumer_transfer":
             if self.payment_method != "upi":
                 raise ValueError("consumer_transfer requires payment_method upi")
-            if set(details) != {"upi_address"} or not isinstance(details.get("upi_address"), str) or not details["upi_address"].strip():
+            if set(details) != {"upi_address"} or not isinstance(details.get("upi_address"), str) or not details["upi_address"].strip() or len(details["upi_address"]) > 254:
                 raise ValueError("consumer_transfer requires method_details.upi_address")
             if details["upi_address"].strip().casefold() != self.recipient.identifier.casefold():
                 raise ValueError("recipient identifier must match upi_address")
@@ -62,7 +62,7 @@ class AssessmentRequest(StrictModel):
             if self.payment_method != "bank_transfer":
                 raise ValueError("invoice_payment requires payment_method bank_transfer")
             required = {"vendor_id", "invoice_number", "destination_account"}
-            if set(details) != required or any(not isinstance(details.get(k), str) or not details[k].strip() for k in required):
+            if set(details) != required or any(not isinstance(details.get(k), str) or not details[k].strip() or len(details[k]) > 120 for k in required):
                 raise ValueError("invoice_payment requires vendor_id, invoice_number, and destination_account")
             if self.recipient.identifier != details["vendor_id"]:
                 raise ValueError("invoice recipient identifier must match method_details.vendor_id")

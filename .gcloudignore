@@ -1,0 +1,24 @@
+# Cloud builds use only the application source; never upload local credentials or cases.
+.git
+.gitignore
+.gcloudignore
+.env
+.env.*
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/node_modules
+**/dist
+**/*.db
+**/*.db-*
+**/*.sqlite*
+**/*.pem
+**/*.key
+.local
+artifacts
+presentation
+docs
+test-results
+playwright-report
+
+**/.test-build

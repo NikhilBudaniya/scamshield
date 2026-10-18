@@ -7,10 +7,12 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "check:copy": "tsc --ignoreConfig src/signal-copy.ts --target ES2022 --module NodeNext --moduleResolution NodeNext --outDir .test-build --skipLibCheck && node scripts/check-signal-copy.mjs",
+    "check:api-auth": "tsc --ignoreConfig src/api.ts src/types.ts --target ES2022 --module ESNext --moduleResolution bundler --outDir .test-build --skipLibCheck && node scripts/check-api-auth.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
+    "firebase": "^13.0.0",
     "react": "latest",
     "react-dom": "latest",
     "typescript": "latest",

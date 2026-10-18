@@ -44,6 +44,12 @@ HISTORY = {
         {"amount_minor": 50000, "currency": "INR", "recipient": "family@upi", "occurred_at": DEMO_TIME - timedelta(days=3)},
         {"amount_minor": 55000, "currency": "INR", "recipient": "family@upi", "occurred_at": DEMO_TIME - timedelta(days=7)},
         {"amount_minor": 52000, "currency": "INR", "recipient": "family@upi", "occurred_at": DEMO_TIME - timedelta(days=10)},
-    ]
+    ],
+    # Synthetic repeat-vendor history for the invoice walkthrough. Amounts
+    # are in paise and dates are intentionally outside the frequency window.
+    "business-acme": [
+        {"amount_minor": amount, "currency": "INR", "recipient": "vendor-acme", "occurred_at": DEMO_TIME - timedelta(days=days)}
+        for amount, days in ((4000000, 40), (5000000, 35), (6000000, 30), (8000000, 25), (10000000, 20))
+    ],
 }
 VENDORS = {"vendor-acme": {"business_id": "business-acme", "destination_account": "IN88-ACME-2200"}}

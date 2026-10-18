@@ -51,6 +51,80 @@ def test_context_limit_and_invoice_identity_validation():
         AssessmentRequest.model_validate(raw)
 
 
+def test_payment_adapter_strings_are_bounded_and_unknown_fields_rejected():
+    upi = dict(SCENARIOS[0]["request"])
+    upi_address = "x" * 255
+    upi["recipient"] = {"identifier": upi_address}
+    upi["method_details"] = {"upi_address": upi_address}
+    with pytest.raises(ValueError):
+        AssessmentRequest.model_validate(upi)
+
+    for field in ("vendor_id", "invoice_number", "destination_account"):
+        invoice = dict(SCENARIOS[3]["request"])
+        invoice["method_details"] = dict(invoice["method_details"])
+        invoice["method_details"][field] = "x" * 121
+        if field == "vendor_id":
+            invoice["recipient"] = {"identifier": "x" * 121}
+        with pytest.raises(ValueError):
+            AssessmentRequest.model_validate(invoice)
+
+    invoice = dict(SCENARIOS[3]["request"])
+    invoice["method_details"] = dict(invoice["method_details"], attacker_note="unbounded")
+    with pytest.raises(ValueError):
+        AssessmentRequest.model_validate(invoice)
+
+
+@pytest.mark.asyncio
+async def test_body_size_middleware_limits_chunked_json_and_keeps_pdf_limit_separate():
+    from app.main import RequestBodySizeLimitMiddleware, JSON_REQUEST_BODY_LIMIT_BYTES, INVOICE_PDF_UPLOAD_PATH
+
+    async def invoke(path, chunks, expected_status, with_length=False, content_type=b"application/json"):
+        messages = [
+            {"type": "http.request", "body": chunk, "more_body": index < len(chunks) - 1}
+            for index, chunk in enumerate(chunks)
+        ]
+        statuses = []
+
+        async def receive():
+            return messages.pop(0) if messages else {"type": "http.request", "body": b"", "more_body": False}
+
+        async def downstream(scope, limited_receive, send):
+            while True:
+                request_message = await limited_receive()
+                if not request_message.get("more_body", False):
+                    break
+            await send({"type": "http.response.start", "status": 200, "headers": []})
+            await send({"type": "http.response.body", "body": b"ok"})
+
+        async def send(message):
+            if message["type"] == "http.response.start":
+                statuses.append(message["status"])
+
+        headers = [(b"content-type", content_type)]
+        if with_length:
+            headers.append((b"content-length", str(sum(map(len, chunks))).encode()))
+        middleware = RequestBodySizeLimitMiddleware(downstream)
+        await middleware({"type": "http", "method": "POST", "path": path, "headers": headers}, receive, send)
+        assert statuses == [expected_status]
+
+    await invoke("/api/v1/assessments", [b"x" * 200_000, b"x" * 70_000], 413)
+    await invoke("/api/v1/assessments", [b"x" * (JSON_REQUEST_BODY_LIMIT_BYTES + 1)], 413, with_length=True)
+    await invoke(INVOICE_PDF_UPLOAD_PATH, [b"x" * 300_000], 200, content_type=b"application/pdf")
+    await invoke(INVOICE_PDF_UPLOAD_PATH, [b"x" * 300_000], 413)
+
+
+def test_fastapi_rejects_oversized_json_before_request_validation(tmp_path, monkeypatch):
+    from app import main
+    repo = Repository(f"sqlite:///{tmp_path / 'body-limit.db'}")
+    monkeypatch.setattr(main, "repository", repo)
+    response = TestClient(app).post(
+        "/api/session",
+        content=b" " * (main.JSON_REQUEST_BODY_LIMIT_BYTES + 1),
+        headers={"Content-Type": "application/json"},
+    )
+    assert response.status_code == 413
+
+
 def test_rules_and_policy_threshold_order():
     safe = request_from(SCENARIOS[0])
     rules, _ = evaluate_rules(safe)
@@ -196,7 +270,7 @@ async def test_all_named_demo_scenarios_match_policy_expectations(tmp_path):
 
 
 def test_missing_history_is_not_a_normal_history_finding():
-    req = request_from(SCENARIOS[4])
+    req = request_from(SCENARIOS[4], customer_id="customer-without-history")
     signals, missing = evaluate_rules(req)
     assert "customer_payment_history" in missing
     assert "new_recipient" not in {s["code"] for s in signals}
@@ -393,7 +467,9 @@ def test_access_code_session_cookie_and_server_rate_limit(tmp_path, monkeypatch)
     monkeypatch.setattr(main.settings, "local_development", True)
     monkeypatch.setattr(main.settings, "cookie_secure", False)
     monkeypatch.setattr(main.settings, "max_assessments_per_session", 1)
-    main.session_counts.clear()
+    with main.session_state_lock:
+        main.session_counts.clear()
+        main.login_attempts.clear()
     with TestClient(app) as client:
         payload = dict(SCENARIOS[0]["request"])
         payload["client_request_id"] = "auth-protected-create"
@@ -405,4 +481,155 @@ def test_access_code_session_cookie_and_server_rate_limit(tmp_path, monkeypatch)
         assert client.post("/api/v1/assessments", json=payload).status_code == 200
         payload["client_request_id"] = "auth-protected-create-2"
         assert client.post("/api/v1/assessments", json=payload).status_code == 429
-    main.session_counts.clear()
+    with main.session_state_lock:
+        main.session_counts.clear()
+        main.login_attempts.clear()
+
+
+def test_case_records_and_idempotency_are_scoped_to_session(tmp_path, monkeypatch):
+    from app import main
+    test_repository = Repository(f"sqlite:///{tmp_path / 'owned-cases.db'}")
+    test_service = AssessmentService(test_repository, JevProvider(settings()), GeminiProvider(settings()))
+    monkeypatch.setattr(main, "repository", test_repository)
+    monkeypatch.setattr(main, "service", test_service)
+    monkeypatch.setattr(main.settings, "access_code", "prototype-access-code")
+    monkeypatch.setattr(main.settings, "session_secret", "b" * 40)
+    monkeypatch.setattr(main.settings, "local_development", True)
+    monkeypatch.setattr(main.settings, "cookie_secure", False)
+    monkeypatch.setattr(main.settings, "max_login_attempts_per_minute", 10)
+    monkeypatch.setattr(main.settings, "max_active_sessions", 10)
+    with main.session_state_lock:
+        main.session_counts.clear()
+        main.login_attempts.clear()
+
+    with TestClient(app) as client:
+        assert client.post("/api/session", json={"access_code": "prototype-access-code"}).status_code == 200
+        first_cookie = client.cookies.get("scamshield_session")
+        payload = dict(SCENARIOS[0]["request"])
+        payload["client_request_id"] = "same-client-id-across-sessions"
+        first = client.post("/api/v1/assessments", json=payload)
+        assert first.status_code == 200, first.text
+        first_id = first.json()["assessment_id"]
+        persisted_first = client.get(f"/api/v1/assessments/{first_id}")
+        assert persisted_first.status_code == 200
+        assert persisted_first.json()["timings_ms"] == first.json()["timings_ms"]
+
+        client.cookies.clear()
+        assert client.post("/api/session", json={"access_code": "prototype-access-code"}).status_code == 200
+        assert client.get(f"/api/v1/assessments/{first_id}").status_code == 404
+        assert client.post(f"/api/v1/assessments/{first_id}/explanation").status_code == 404
+        assert client.get("/api/v1/assessments").json()["assessments"] == []
+
+        second = client.post("/api/v1/assessments", json=payload)
+        assert second.status_code == 200, second.text
+        second_id = second.json()["assessment_id"]
+        assert second_id != first_id
+        assert [case["assessment_id"] for case in client.get("/api/v1/assessments").json()["assessments"]] == [second_id]
+        changed = dict(payload)
+        changed["amount_minor"] += 1
+        assert client.post("/api/v1/assessments", json=changed).status_code == 409
+
+        client.cookies.set("scamshield_session", first_cookie)
+        assert client.get(f"/api/v1/assessments/{first_id}").status_code == 200
+        assert client.get(f"/api/v1/assessments/{second_id}").status_code == 404
+    with main.session_state_lock:
+        main.session_counts.clear()
+        main.login_attempts.clear()
+
+
+def test_legacy_cases_migrate_to_inaccessible_reserved_owner(tmp_path):
+    import sqlite3
+    database = tmp_path / "legacy.db"
+    connection = sqlite3.connect(database)
+    connection.executescript("""
+        CREATE TABLE assessment_cases (
+            assessment_id VARCHAR(36) PRIMARY KEY,
+            client_request_id VARCHAR(120) NOT NULL,
+            payload_hash VARCHAR(64) NOT NULL,
+            created_at DATETIME NOT NULL,
+            payload JSON NOT NULL
+        );
+        CREATE UNIQUE INDEX ix_assessment_cases_client_request_id ON assessment_cases (client_request_id);
+        INSERT INTO assessment_cases VALUES ('legacy-case', 'legacy-request', 'hash', '2026-10-18T00:00:00+00:00', '{"assessment_id":"legacy-case"}');
+    """)
+    connection.close()
+    repo = Repository(f"sqlite:///{database}")
+    repo.initialize()
+    assert repo.get_case("legacy-case", "new-session") is None
+    assert repo.get_case("legacy-case", "legacy")["assessment_id"] == "legacy-case"
+    assert repo.list_cases("new-session") == []
+    assert repo.list_cases("local-unprotected") == []
+
+
+def test_production_startup_fails_closed_even_with_fixture_providers(monkeypatch):
+    from app import main
+    class EmptyRepository:
+        def initialize(self): pass
+    monkeypatch.setattr(main, "repository", EmptyRepository())
+    monkeypatch.setenv("K_SERVICE", "scamshield")
+    monkeypatch.setattr(main.settings, "environment", "development")
+    monkeypatch.setattr(main.settings, "access_code", None)
+    monkeypatch.setattr(main.settings, "session_secret", "local-demo-secret-change-me")
+    monkeypatch.setattr(main.settings, "cookie_secure", False)
+    monkeypatch.setattr(main.settings, "local_development", False)
+    with pytest.raises(RuntimeError, match="DEMO_ACCESS_CODE"):
+        main.startup()
+    monkeypatch.setattr(main.settings, "access_code", "prototype-access-code")
+    with pytest.raises(RuntimeError, match="SESSION_SECRET"):
+        main.startup()
+    monkeypatch.setattr(main.settings, "session_secret", "c" * 40)
+    with pytest.raises(RuntimeError, match="COOKIE_SECURE"):
+        main.startup()
+    monkeypatch.setattr(main.settings, "cookie_secure", True)
+    monkeypatch.setattr(main.settings, "local_development", True)
+    with pytest.raises(RuntimeError, match="LOCAL_DEVELOPMENT"):
+        main.startup()
+    monkeypatch.setattr(main.settings, "local_development", False)
+    main.startup()
+
+
+@pytest.mark.asyncio
+async def test_process_provider_budget_is_shared_and_serialized(tmp_path):
+    from fastapi import HTTPException
+    live = settings(jev_mode="live", jev_api_key="test-key", max_provider_calls_per_process=1)
+
+    class ConcurrentClassifier:
+        settings = live
+        calls = 0
+        async def classify(self, request):
+            self.calls += 1
+            await asyncio.sleep(.02)
+            return Classification("live", [], model="mock")
+
+    repo = Repository(f"sqlite:///{tmp_path / 'provider-budget.db'}")
+    repo.initialize()
+    classifier = ConcurrentClassifier()
+    svc = AssessmentService(repo, classifier, GeminiProvider(live))
+    results = await asyncio.gather(
+        svc.assess(request_from(SCENARIOS[0], client_request_id="provider-budget-1"), "session-1"),
+        svc.assess(request_from(SCENARIOS[0], client_request_id="provider-budget-2"), "session-2"),
+        return_exceptions=True,
+    )
+    assert classifier.calls == 1
+    assert sum(isinstance(result, HTTPException) and result.status_code == 429 for result in results) == 1
+
+
+def test_session_creation_limits_include_success_and_active_session_cap(monkeypatch):
+    from app import main
+    monkeypatch.setattr(main.settings, "access_code", "prototype-access-code")
+    monkeypatch.setattr(main.settings, "session_secret", "d" * 40)
+    monkeypatch.setattr(main.settings, "local_development", True)
+    monkeypatch.setattr(main.settings, "cookie_secure", False)
+    monkeypatch.setattr(main.settings, "max_login_attempts_per_minute", 5)
+    monkeypatch.setattr(main.settings, "max_active_sessions", 1)
+    with main.session_state_lock:
+        main.session_counts.clear()
+        main.login_attempts.clear()
+    with TestClient(app) as client:
+        assert client.post("/api/session", json={"access_code": "prototype-access-code"}).status_code == 200
+        assert client.post("/api/session", json={"access_code": "prototype-access-code"}).status_code == 429
+        assert len(main.login_attempts["testclient"]) == 2
+        assert len(main.session_counts) == 1
+    with main.session_state_lock:
+        main.session_counts.clear()
+        main.login_attempts.clear()

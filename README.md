@@ -2,7 +2,7 @@
 
 ScamShield is a synthetic invoice-payment review prototype. A visitor can upload a PDF, PNG, or JPEG invoice (up to 5 MiB; PDFs up to 10 pages and images up to 20 megapixels), review extracted fields, select a known synthetic vendor, and explicitly request a payment-risk assessment. Malformed and encrypted PDFs are rejected before provider use. Deterministic rules compare the destination with the saved vendor record and available transaction history. Gemini is an optional extraction and contextual-analysis provider. Every case requires human review; no payment is executed and no result proves fraud or safety.
 
-The public release is designed for Firebase Authentication, Firestore, Cloud Run, and Gemini. Live GCP setup and provider calls are still pending verification. The local fixture workflow is available without cloud credentials or model calls.
+Try the [public prototype](https://scamshield-304420617883.us-central1.run.app). It runs on Cloud Run with Firebase anonymous authentication, Firestore, and Vertex AI Gemini 2.5 Flash-Lite. Two synthetic invoice flows were verified end to end on 18 October 2026. The local fixture workflow is also available without cloud credentials or model calls.
 
 ## Local offline demo
 
@@ -44,18 +44,18 @@ The important modes are:
 | --- | --- | --- |
 | Authentication | `AUTH_MODE=access_code` (or local unprotected when no code is set) | `AUTH_MODE=firebase` with anonymous Firebase Authentication |
 | Storage | `STORAGE_BACKEND=sqlite` | `STORAGE_BACKEND=firestore` |
-| Gemini | `GEMINI_MODE=fixture` | `GEMINI_MODE=live` after credentials and billing/eligibility are verified |
-| Context classifier | `CONTEXT_PROVIDER=jev`, `JEV_MODE=fixture` | Explicitly select `gemini` or retain Jev only if separately configured |
+| Gemini | `GEMINI_MODE=fixture` | `GEMINI_MODE=live`, `GEMINI_BACKEND=vertex` |
+| Context classifier | `CONTEXT_PROVIDER=jev`, `JEV_MODE=fixture` | `CONTEXT_PROVIDER=gemini`; Jev is disabled in the public deployment |
 
 `GET /api/config` is public and returns the selected auth/storage modes and Firebase client configuration. In Firebase mode, protected API requests require `Authorization: Bearer <Firebase ID token>`; the backend verifies the token and scopes data to its verified UID. In access-code mode, protected calls use the HTTP-only session cookie. Server API keys and service credentials are never returned by `/api/config`.
 
 For Firebase mode, configure `FIREBASE_PROJECT_ID`, `FIREBASE_API_KEY`, `FIREBASE_AUTH_DOMAIN`, and `FIREBASE_APP_ID`. The project ID falls back to `GOOGLE_CLOUD_PROJECT`. Enable anonymous sign-in in Firebase Authentication. Managed production Firebase mode requires `STORAGE_BACKEND=firestore`; startup rejects SQLite so cases and quotas cannot silently become ephemeral. Firestore access is server-side through Application Default Credentials; configure rules so browsers cannot read or write application records directly.
 
-For live Gemini, select one backend explicitly. `GEMINI_BACKEND=developer` uses `GEMINI_API_KEY`; `GEMINI_BACKEND=vertex` uses `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION`, and the runtime's Google credentials. No automatic switch between Developer API and Vertex occurs. Gemini API free usage or credits are not guaranteed; billing status and eligibility are still being checked. Review current [Gemini API pricing](https://ai.google.dev/gemini-api/docs/pricing) and [Vertex AI pricing](https://cloud.google.com/vertex-ai/generative-ai/pricing) for the selected project before enabling live mode.
+For live Gemini, select one backend explicitly. `GEMINI_BACKEND=developer` uses `GEMINI_API_KEY`; `GEMINI_BACKEND=vertex` uses `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION`, and the runtime's Google credentials. No automatic switch between Developer API and Vertex occurs. Gemini API free usage or credits are not guaranteed; the deployed project has billing enabled and credit coverage is unconfirmed. Review current [Gemini API pricing](https://ai.google.dev/gemini-api/docs/pricing) and [Vertex AI pricing](https://cloud.google.com/vertex-ai/generative-ai/pricing) for the selected project before enabling live mode.
 
 The durable Firestore model-attempt limits are 9 per verified visitor and 50 globally per UTC day, with 200 attempts across the lifetime of the Firestore database. Failed live attempts count toward all limits. SQLite mode instead uses a process-local budget. Provider calls use bounded timeouts. Fixture output is not a measurement of model accuracy.
 
-See [.env.example](.env.example) for all local settings and [docs/cloud-deployment.md](docs/cloud-deployment.md) for the planned public setup.
+See [.env.example](.env.example) for all local settings and [docs/cloud-deployment.md](docs/cloud-deployment.md) for the public setup and cost controls.
 
 ## API workflow
 
@@ -69,9 +69,9 @@ Uploads accept PDF, PNG, and JPEG, enforce MIME/signature checks, a 5 MiB limit,
 
 ## Deployment status and limitations
 
-The intended public topology is one Cloud Run service serving the frontend and FastAPI, Firebase Authentication for visitor identity, Firestore for persistent owner-scoped cases and model quotas, and Gemini for extraction and contextual analysis. Use zero minimum and one maximum Cloud Run instance for the initial demo. These settings do not cap billing. Cloud Run, build artifacts, Gemini, and Google Cloud services can incur charges; free credits or eligibility remain under investigation.
+The deployed public topology is one Cloud Run service serving the frontend and FastAPI, Firebase Authentication for visitor identity, Firestore for persistent owner-scoped cases and model quotas, and Gemini for extraction and contextual analysis. Use zero minimum and one maximum Cloud Run instance for the initial demo. These settings do not cap billing. Cloud Run, build artifacts, Gemini, and Google Cloud services can incur charges; free credits or eligibility remain under investigation.
 
-No live Firebase, Firestore, Gemini, or Cloud Run integration has been verified yet. Do not describe the public demo as deployed until the actual upload-to-assessment flow, visitor isolation, durable persistence, provider provenance, and public URL have been tested. SQLite is suitable for local use only; Cloud Run's filesystem is ephemeral. See the deployment checklist for the exact environment values and acceptance checks.
+Live extraction, context classification, and explanation passed for a routine invoice (Continue) and a changed destination invoice (Review). Case readback, retry idempotency, anonymous authentication, cross-visitor isolation, and denied direct Firestore access were verified. Browser cases remained available after a Cloud Run revision change. SQLite is suitable for local use only; Cloud Run's filesystem is ephemeral. See the deployment checklist for the exact environment values and acceptance checks.
 
 ## Verification
 
@@ -85,4 +85,4 @@ npm run check:copy
 npm run build
 ```
 
-The 40-case evaluation is a fixture-based policy regression set split into disjoint development and held-out families. It does not measure classifier accuracy or live model performance. Live GCP integration, billing eligibility, and public deployment remain pending.
+The 40-case evaluation is a fixture-based policy regression set split into disjoint development and held-out families. It does not measure classifier accuracy or live model performance. The current release has 59 passing backend tests and two live synthetic integration cases. Neither is a real-world fraud benchmark. The public demo has bounded model quotas; exhausted quotas return an explicit error. A ₹100 project budget alert covers the evaluation period through 6 November; alerts do not enforce a spending cutoff.

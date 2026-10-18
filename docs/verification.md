@@ -1,6 +1,19 @@
-# Local verification record
+# Live release verification — 18 October 2026
 
-Date: 2026-10-11
+Public app: https://scamshield-304420617883.us-central1.run.app
+
+Cloud Run revision: `scamshield-00003-fhv`.
+
+- 59 backend tests passed; the larger-model final review found no release-critical blockers in the provider fixes.
+- Two synthetic PDF invoices completed live Vertex Gemini 2.5 Flash-Lite extraction, context classification and explanation. The routine invoice returned Continue; the changed destination invoice returned Review.
+- Firebase anonymous identities were created through the public auth service. Unauthenticated API access returned 401.
+- Firestore case readback and retry idempotency passed; a second visitor received 404 for another visitor's case and an empty case list. Direct Firestore reads using the visitor token returned 403.
+- Browser cases created on revision 2 were retrieved after revision 3 deployed. Live provider labels and the saved destination mismatch were visible.
+- The initial live checks found and resolved an unsupported extraction schema constraint and contradictory explanation instructions. Both were retested against the real provider.
+- These are functional integration checks on synthetic inputs, not fraud accuracy, production readiness or latency benchmarks. Historical fixture evaluation remains separate.
+- The deployed app enforces 9 model attempts per visitor per UTC day, 50 globally per UTC day and 200 lifetime attempts. Failed attempts count. The ₹100 billing alert does not enforce an exact spending cutoff.
+
+## Historical local verification — 11 October 2026
 
 Implementation was delegated to GPT-6 Luna workers; an independent GPT-6 Astra reviewer inspected the implementation and presentation. The coordinator reproduced and resolved review findings before delivery.
 

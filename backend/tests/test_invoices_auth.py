@@ -16,6 +16,19 @@ from app.rules import evaluate_rules
 from app.schemas import Context
 
 
+def test_invoice_extraction_schema_converts_with_installed_google_genai_sdk():
+    from google.genai import types
+    from pydantic import ValidationError
+    from app.providers import InvoiceExtractionFields
+
+    converted = types.Schema.model_validate(InvoiceExtractionFields.model_json_schema())
+    amount_schema = converted.properties["amount_minor"].any_of[0]
+    assert amount_schema.minimum == 1
+    assert amount_schema.maximum == 10**15
+    with pytest.raises(ValidationError):
+        InvoiceExtractionFields.model_validate({"amount_minor": 0})
+
+
 def install_firestore_transaction_mock(monkeypatch):
     import sys
     import types

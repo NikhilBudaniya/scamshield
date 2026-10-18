@@ -406,6 +406,43 @@ async def test_gemini_classifier_and_explainer_use_selected_backend(monkeypatch,
     assert constructions == [expected, expected]
 
 
+@pytest.mark.asyncio
+async def test_gemini_explainer_orders_all_signals_including_low_confidence(monkeypatch):
+    from google import genai
+
+    signals = [
+        {"code": code, "source": "gemini_classification", "value": False,
+         "evidence_ids": ["invoice-text"], "probability": 0.05}
+        for code in ("impersonation", "safe_account", "urgency", "secrecy", "upfront_fee", "bypass_verification")
+    ]
+    signals.append({"code": "changed_vendor_account", "source": "rules", "value": {
+        "requested_destination": "IN99-NEW-8891", "known_destination": "IN88-ACME-2200"}, "evidence_ids": ["invoice"]})
+    prompt_texts = []
+
+    class FakeModels:
+        async def generate_content(self, **kwargs):
+            prompt_texts.append(kwargs["contents"])
+            data = {"ordered_signal_codes": [signal["code"] for signal in signals],
+                    "ordered_missing_checks": ["customer_payment_history"]}
+            return SimpleNamespace(text=json.dumps(data))
+
+    class FakeAio:
+        models = FakeModels()
+        async def aclose(self): pass
+
+    monkeypatch.setattr(genai, "Client", lambda **kwargs: SimpleNamespace(aio=FakeAio()))
+    provider = GeminiProvider(settings(gemini_backend="developer", gemini_mode="live", gemini_api_key="test-key"))
+    mode, explanation = await provider.explain({"recommendation": "review", "signals": signals,
+        "missing_data": ["customer_payment_history"]})
+
+    assert mode == "live"
+    assert "requested vendor destination IN99-NEW-8891 differs" in explanation.summary
+    assert "safe-account language" not in explanation.summary
+    assert explanation.next_step.startswith("Pause this simulated payment")
+    assert "exactly once" in prompt_texts[0]
+    assert "low probability" in prompt_texts[0]
+
+
 def test_amount_rule_marks_insufficient_same_currency_history(monkeypatch):
     import app.rules as rules_module
     req = request_from(SCENARIOS[1])

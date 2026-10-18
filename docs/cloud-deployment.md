@@ -1,14 +1,14 @@
 # Public demo deployment
 
-**Status:** preparation only. No Firebase, Firestore, live Gemini, or Cloud Run integration has been verified, and there is no verified public URL. Do not describe the service as deployed until the release checks below pass.
+**Status:** deployed and verified on 18 October 2026. [Public prototype](https://scamshield-304420617883.us-central1.run.app), revision `scamshield-00003-fhv`. Two synthetic invoice cases passed live extraction, classification and explanation; case readback, idempotency, visitor isolation and denied direct Firestore access passed. Browser cases survived a revision change. See [verification](verification.md).
 
-## Intended topology
+## Deployed topology
 
 One Cloud Run service serves the built frontend and FastAPI API. Firebase Authentication creates anonymous visitor identities; the browser sends an ID token and the backend verifies it before accessing visitor data. Firestore stores assessment cases and idempotency records under owner-scoped paths, and transactionally reserves model calls against daily per-visitor, daily global, and lifetime global limits. Gemini is the selected provider for invoice extraction and contextual analysis when `GEMINI_MODE=live`. Synthetic invoice fixtures remain available when live Gemini is not configured.
 
 The initial Cloud Run target is request-based billing, zero minimum instances, one maximum instance, one Uvicorn worker, 512 MiB memory, one CPU, and concurrency eight. These settings help limit idle runtime use but do not cap billing. Build artifacts, Firestore, and model calls can incur charges. Eligibility for free credits and free model usage is still being investigated; no cost guarantee is made.
 
-The application does not use Cloud SQL for this release. SQLite remains for local development only because Cloud Run's filesystem is ephemeral. Firestore is the intended durable case store. Uploaded invoice bytes are held only for the extraction request and are not stored.
+The application does not use Cloud SQL for this release. SQLite remains for local development only because Cloud Run's filesystem is ephemeral. Firestore is the deployed durable case store. Uploaded invoice bytes are held only for the extraction request and are not stored.
 
 ## Required application configuration
 
@@ -27,12 +27,13 @@ GOOGLE_CLOUD_PROJECT=PROJECT_ID
 DAILY_MODEL_LIMIT_PER_USER=9
 DAILY_MODEL_LIMIT_GLOBAL=50
 TOTAL_MODEL_LIMIT_GLOBAL=200
-GEMINI_BACKEND=developer or vertex
-GEMINI_MODE=fixture or live
+GEMINI_BACKEND=vertex
+GOOGLE_CLOUD_LOCATION=global
+GEMINI_MODE=live
 CONTEXT_PROVIDER=gemini
 GEMINI_MODEL=gemini-2.5-flash-lite
-GEMINI_TIMEOUT_SECONDS=8
-GEMINI_CLASSIFICATION_TIMEOUT_SECONDS=8
+GEMINI_TIMEOUT_SECONDS=20
+GEMINI_CLASSIFICATION_TIMEOUT_SECONDS=15
 ```
 
 Use the Firebase web app's actual public client values; never put server credentials in the frontend config. `FIREBASE_PROJECT_ID` may fall back to `GOOGLE_CLOUD_PROJECT`. Enable Firebase anonymous authentication. The production startup check rejects Firebase mode with SQLite so cases and quotas remain durable. Configure Firestore rules to deny direct client reads and writes; the backend uses Application Default Credentials through its Cloud Run service identity.
@@ -89,6 +90,6 @@ The helper deploys publicly reachable HTTPS to Cloud Run; Firebase bearer-token 
 
 ## Cost and lifecycle
 
-Cloud Run's free allowance and any Gemini free tier or credits depend on current product terms and account eligibility. This is still under investigation. Review [Cloud Run pricing](https://cloud.google.com/run/pricing), [Gemini API pricing](https://ai.google.dev/gemini-api/docs/pricing), and [Vertex AI pricing](https://cloud.google.com/vertex-ai/generative-ai/pricing) before enabling live calls. Budgets generally alert rather than enforce a hard stop; quotas in this app restrict model requests but do not cap all project charges.
+The approved planning budget is ₹100 total out-of-pocket through 6 November 2026. A project-scoped ₹100 billing budget has alerts at 25%, 50%, 90% and 100%, for 18 October through 6 November inclusive. Cloud Run uses zero minimum and one maximum instance; Firestore uses its free-tier-eligible default database. Vertex Gemini usage is billed unless covered by applicable credits. Credit coverage has not been confirmed. No zero-cost guarantee is made. Review [Cloud Run pricing](https://cloud.google.com/run/pricing), [Gemini API pricing](https://ai.google.dev/gemini-api/docs/pricing), and [Vertex AI pricing](https://cloud.google.com/vertex-ai/generative-ai/pricing) before enabling live calls. Budgets generally alert rather than enforce a hard stop; quotas in this app restrict model requests but do not cap all project charges.
 
-Firestore cases and daily/lifetime usage counts persist beyond instance replacement. Access-code session state and single-flight explanation locks are process-local; use Firebase mode for the public service. The initial one-instance setting is a deployment constraint, not distributed locking or an availability guarantee. Remove the service and unused resources when the demo ends.
+Firestore cases and daily/lifetime usage counts persist beyond instance replacement. Access-code session state and single-flight explanation locks are process-local; use Firebase mode for the public service. The initial one-instance setting is a deployment constraint, not distributed locking or an availability guarantee. Review billing and model counters during evaluation; request approval before raising the spending budget. Keep the prototype available through evaluation. After evaluation, remove resources only when authorized.

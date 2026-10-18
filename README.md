@@ -4,6 +4,8 @@ ScamShield is a synthetic invoice-payment review prototype. A visitor can upload
 
 Try the [public prototype](https://scamshield-304420617883.us-central1.run.app). It runs on Cloud Run with Firebase anonymous authentication, Firestore, and Vertex AI Gemini 2.5 Flash-Lite. Two synthetic invoice flows were verified end to end on 18 October 2026. The local fixture workflow is also available without cloud credentials or model calls.
 
+The [submission release](https://github.com/NikhilBudaniya/scamshield/releases/tag/hackathon-prototype) contains the 3:03 edited product walkthrough and the prescribed pitch deck. The walkthrough uses actual deployed-app captures and generated narration.
+
 ## Local offline demo
 
 Requires Python 3.12 or later and Node.js 22 or later.

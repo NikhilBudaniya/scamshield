@@ -19,3 +19,7 @@ presentation/.build/
 .test-build/
 test-results/
 playwright-report/
+
+# Published video/audio binaries are release assets; source scenes remain tracked.
+artifacts/demo/*.mp4
+artifacts/demo/*.aiff

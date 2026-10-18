@@ -1,0 +1,40 @@
+{
+  "output": "scamshield-demo.mp4",
+  "width": 1440,
+  "height": 900,
+  "fps": 10,
+  "audio": "narration.aiff",
+  "preview": "first-frame.png",
+  "scenes": [
+    {
+      "image": "frames/01-live-start.png",
+      "duration": 25,
+      "caption": "ScamShield — invoice review before a simulated assessment"
+    },
+    {
+      "image": "frames/02-live-upload.png",
+      "duration": 30,
+      "caption": "Synthetic invoice · Vertex AI Gemini 2.5 Flash-Lite"
+    },
+    {
+      "image": "frames/03-live-confirm.png",
+      "duration": 40,
+      "caption": "Candidate fields remain subject to human confirmation"
+    },
+    {
+      "image": "frames/04-live-assessment.png",
+      "duration": 40,
+      "caption": "Policy decision with visible evidence and missing checks"
+    },
+    {
+      "image": "frames/05-live-case.png",
+      "duration": 30,
+      "caption": "Case record and report · show only verified features"
+    },
+    {
+      "image": "frames/06-live-limits.png",
+      "duration": 35,
+      "caption": "58 backend tests · synthetic data · no payment execution"
+    }
+  ]
+}

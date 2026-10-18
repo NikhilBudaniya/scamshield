@@ -1,0 +1,55 @@
+{
+  "output": "scamshield-demo.mp4",
+  "width": 1440,
+  "height": 900,
+  "fps": 10,
+  "audio": "narration.aiff",
+  "preview": "first-frame.png",
+  "scenes": [
+    {
+      "image": "frames/01-live-start.jpg",
+      "duration": 33,
+      "caption": "Edited walkthrough · ScamShield · AI narration · Synthetic data only"
+    },
+    {
+      "image": "frames/02-live-upload.jpg",
+      "duration": 25,
+      "caption": "Live Vertex Gemini extraction · Candidate fields for human review"
+    },
+    {
+      "image": "frames/03-live-confirm.jpg",
+      "duration": 26,
+      "caption": "Human review · Confirm vendor and destination account"
+    },
+    {
+      "image": "frames/04-live-assessment.jpg",
+      "duration": 17,
+      "caption": "Changed destination + bypass language · Review"
+    },
+    {
+      "image": "frames/05-live-explanation.jpg",
+      "duration": 15,
+      "caption": "Live Gemini classification · Evidence summary stays with the case"
+    },
+    {
+      "image": "frames/06-live-normal.jpg",
+      "duration": 14,
+      "caption": "Routine invoice · Continue, with no safety guarantee"
+    },
+    {
+      "image": "frames/07-live-history.jpg",
+      "duration": 15,
+      "caption": "Two cases retained in Firestore history · No payment executed"
+    },
+    {
+      "image": "frames/05-live-explanation.jpg",
+      "duration": 30,
+      "caption": "Cloud Run · Firebase · Vertex AI Gemini 2.5 Flash-Lite · Synthetic data"
+    },
+    {
+      "image": "frames/05-live-explanation.jpg",
+      "duration": 8,
+      "caption": "Live app: scamshield-304420617883.us-central1.run.app · Source: github.com/NikhilBudaniya/scamshield"
+    }
+  ]
+}

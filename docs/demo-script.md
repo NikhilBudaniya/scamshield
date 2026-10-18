@@ -1,58 +1,51 @@
-# ScamShield — 3–4 minute demo script
+# ScamShield — 3–4 minute product walkthrough
 
-**Recording status:** Not recorded. Use this script only after the invoice upload flow, Gemini extraction, Firebase identity, Firestore persistence and Cloud Run URL pass the release checks. If any live step is unavailable, label it as unavailable and do not stage or imply a successful call. Use synthetic invoices only.
+**Target duration:** 3:03 (183 seconds). The narration is 440 words and 183.03 seconds; visual cuts follow the spoken chapters.
+**Recording status:** Edited walkthrough assembled from actual Cloud Run UI captures, with generated narration and explanatory captions. It is not a continuous screen recording. Product flow was verified on Cloud Run revision 3.
+**Capture policy:** Use the actual Cloud Run captures in `artifacts/screenshots/`. Crop and zoom for legibility, but do not add, remove or change UI content. Captions and voice-over may clarify the view. All sample invoices are synthetic.
 
-**Target length:** About 3 minutes 30 seconds. The current Hack2skill form asks for a 3–4 minute video.
+## Scenes and narration
 
-## 0:00–0:25 — The invoice risk
+### 0:00–0:33 — The review problem
 
-**Say:** “Invoice fraud can change the destination account while the invoice looks routine. ScamShield asks a human to check extracted invoice details against a known vendor before a simulated payment assessment.”
+**Show:** `live-01-start.jpg`; the opening caption labels this as an edited walkthrough using synthetic data.
 
-**Show:** The public app in a fresh anonymous browser session. Identify it as a prototype and point out the synthetic-data label.
+**Say:** “An invoice can look familiar while its payment destination has changed. ScamShield gives a person a review step before an invoice reaches a simulated assessment. The goal is to compare invoice details with a known vendor record and keep the evidence behind the recommendation visible. This walkthrough uses synthetic invoices on the public demo, including invented vendor names, account identifiers and amounts. The interface keeps the person in control of the next step. The app never sends a payment.”
 
-## 0:25–1:00 — Upload and extract
+### 0:33–0:58 — Upload and extract
 
-**Do:** Select the supplied synthetic invoice sample or upload a synthetic PDF, PNG or JPEG no larger than 5 MiB. Start extraction.
+**Show:** `live-02-extracted.jpg`. Focus the crop on the upload, Live Gemini status and candidate invoice fields.
 
-**Say:** “Gemini returns candidate invoice fields in a bounded schema. Extraction does not submit a payment or create an assessment. The provider label shows whether this result came from a live Gemini request or a fixture.”
+**Say:** “I’ll upload a synthetic invoice. Vertex AI Gemini 2.5 Flash-Lite returns candidate fields for the vendor, invoice number, amount and destination account. The result stays visible for a person to review, and the provider status appears beside the uploaded file. The upload alone does not create an assessment, and extracted identity does not select or verify a vendor by itself.”
 
-**Show:** Filename, extraction status, extracted values and warnings. If the live call fails, show the unavailable state and use the manual form only if the app offers it.
+### 0:58–1:24 — Human confirmation
 
-## 1:00–1:45 — Human confirmation
+**Show:** `live-03-confirmed.jpg`, showing the selected known vendor and destination details.
 
-**Do:** Review the vendor, invoice number, amount, currency and destination. Correct a field if needed, choose the known synthetic vendor record, and confirm the destination.
+**Say:** “I check the extracted values, select the known synthetic vendor record and confirm the destination. The reviewer can edit candidate fields before submitting. A mismatch remains visible even after the fields are confirmed. Here, the requested bank account differs from the saved vendor account. ScamShield keeps those two values visible so the reviewer can see the discrepancy before deciding what to do.”
 
-**Say:** “Extracted identity is still untrusted evidence. A person reviews the values and selects the vendor record. ScamShield compares the confirmed destination with that saved record.”
+### 1:24–1:56 — Changed account and explanation
 
-**Show:** The confirmed fields and the known vendor details. For the changed-account sample, make the requested and saved destinations easy to compare.
+**Show:** 1:24–1:41 `live-04-assessed.jpg`, then 1:41–1:56 `live-05-explained.jpg`. Emphasize Review, changed vendor account, bypass language and the displayed evidence summary. Gemini classifies the message; a deterministic template writes the summary.
 
-## 1:45–2:25 — Assessment and evidence
+**Say:** “After submission, the policy returns Review. The account change is one recorded signal. Gemini classifies the request message, which asks the recipient to bypass a callback. The policy turns validated evidence codes into a fixed explanation and recommends pausing the simulated payment while the reviewer checks through a trusted, independent contact. The displayed summary uses a deterministic template; Gemini does not write it. This is evidence for human review, not a finding that fraud has occurred.”
 
-**Do:** Submit the assessment after confirmation.
+### 1:56–2:25 — Routine invoice and history
 
-**Say:** “Deterministic rules evaluate the confirmed payment facts. The policy returns Continue, Verify or Review and keeps the supporting evidence and missing checks visible. Gemini can help extract and classify evidence, but it does not authorize payment or override the policy.”
+**Show:** 1:56–2:10 `live-06-normal.jpg`, then 2:10–2:25 `live-07-history.jpg`. Show Continue beside Review and the two saved cases. Do not present visitor isolation as a visual demo.
 
-**Show:** Recommendation, changed-destination signal, provider status and explanation status. State clearly that no money moves.
+**Say:** “A second synthetic invoice uses the saved vendor destination and returns Continue because no configured hold was met. Continue means no configured rule requested intervention; it is not an approval or a safety guarantee. Case history retains both the routine invoice and the changed-account review, so a reviewer can compare their outcomes. The case report can be downloaded. The Firestore records remained available after a Cloud Run revision change.”
 
-## 2:25–2:55 — Case history and ownership
+### 2:25–3:03 — Architecture and limits
 
-**Do:** Open case history, download the case JSON if the verified build supports it, then open a second private browser session and show that it has its own anonymous identity and cannot read the first session’s cases.
+**Show:** 2:25–2:55 `live-05-explained.jpg` with architecture caption, then 2:55–3:03 the same actual UI capture with the public app and repository URLs in the caption.
 
-**Say:** “Firestore keeps the case record under the visitor identity. The second session cannot see the first visitor’s case.”
+**Say:** “The app runs on Cloud Run, uses Firebase anonymous authentication and Firestore, and calls Vertex AI Gemini 2.5 Flash-Lite. Tests confirmed one visitor cannot read another visitor’s cases. The runtime limits model attempts to nine per visitor per day, fifty globally per day and two hundred total. A one-hundred-rupee budget alert runs through November sixth; alerts do not stop charges. Fifty-nine backend tests passed, but test counts do not measure fraud accuracy. This is a human-reviewed prototype using synthetic data, not a payment system. The repository and live demo are linked here.”
 
-**Show:** Only if this isolation check has passed against the deployed service. Do not make the ownership claim from a local SQLite run.
+## Release evidence
 
-## 2:55–3:30 — Stack and limits
-
-**Say:** “The target stack uses Firebase anonymous authentication, Firestore for cases and quotas, Cloud Run for the app and API, and Gemini for extraction and evidence analysis. This is an invoice-review prototype with synthetic data. It does not execute payments or establish fraud accuracy. The links below lead to the public repository, live demo and full walkthrough.”
-
-**Show:** The verified public GitHub repository and Cloud Run URL, then end on the tested app. Share the video only after it is between three and four minutes and plays without a signed-in account.
-
-## Final release checks
-
-- Verify the public Cloud Run link in a fresh browser with no Google sign-in.
-- Complete one uploaded invoice flow through extraction, human confirmation, assessment and case retrieval.
-- Verify Firestore persistence after a new request and verify cross-visitor isolation.
-- Keep the provider mode, Firebase auth mode and storage mode visible and accurate.
-- Check the live video duration and public playback access.
-- Replace all pending submission links only with URLs tested from an anonymous session.
+- Two synthetic invoice flows completed with live Gemini extraction, contextual classification and deterministic evidence summary. The routine case returned Continue; the changed destination case returned Review.
+- Firestore readback, retry idempotency and case persistence across a Cloud Run revision change passed.
+- Cross-visitor case lookup returned 404, unauthenticated API access returned 401, and direct browser access to Firestore returned 403. These are test results; the video does not stage a second-browser isolation demonstration.
+- The 59 backend tests are regression checks, not a model-accuracy benchmark.
+- Cloud billing is enabled. The ₹100 alert is not a spending cap; Vertex AI, Firestore and Cloud Run use may incur charges.

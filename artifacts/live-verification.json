@@ -1,0 +1,55 @@
+{
+  "base_url": "https://scamshield-304420617883.us-central1.run.app",
+  "checked_at": "2026-10-18T14:47:50.990969+00:00",
+  "checks": {
+    "runtime_config": true,
+    "unauthenticated_denied": true,
+    "idempotency": true,
+    "cross_visitor_case_denied": true,
+    "other_visitor_history_empty": true,
+    "direct_client_firestore_denied": true
+  },
+  "cases": [
+    {
+      "sample": "acme-repeat",
+      "recommendation": "continue",
+      "extraction_status": "live",
+      "provider_status": {
+        "gemini": "live",
+        "gemini_classifier": "live",
+        "jev": "not_requested"
+      },
+      "model": "gemini-2.5-flash-lite",
+      "signals": [
+        "impersonation",
+        "safe_account",
+        "urgency",
+        "secrecy",
+        "upfront_fee",
+        "bypass_verification"
+      ]
+    },
+    {
+      "sample": "acme-changed-account",
+      "recommendation": "review",
+      "extraction_status": "live",
+      "provider_status": {
+        "gemini": "live",
+        "gemini_classifier": "live",
+        "jev": "not_requested"
+      },
+      "model": "gemini-2.5-flash-lite",
+      "signals": [
+        "changed_vendor_account",
+        "impersonation",
+        "safe_account",
+        "urgency",
+        "secrecy",
+        "upfront_fee",
+        "bypass_verification"
+      ]
+    }
+  ],
+  "note": "Two synthetic functional integration cases; not an accuracy or latency benchmark.",
+  "revision": "scamshield-00003-fhv"
+}

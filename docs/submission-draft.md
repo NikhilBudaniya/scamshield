@@ -1,36 +1,36 @@
 # ScamShield — Hack2skill submission draft
 
-**Status:** Draft only. The local invoice walkthrough is verified in fixture mode. Live Gemini extraction and cloud persistence are not verified; Cloud Run deployment, public repository URL, product URL and demo video are pending. Do not submit until the public links pass anonymous-browser checks.
+**Team:** pulse
+**Team leader:** Nikhil Kumar
+**Challenge selection:** Choose the applicable option in the live form.
+**Submission status:** Public app, repository and 3:03 demo video are public. Full synthetic invoice smoke checks passed on Cloud Run revision 3.
 **Observed deadline:** 18 October 2026, 23:59 IST.
 
-**Registered team name:** pulse
-**Team leader:** Nikhil Kumar
-**Challenge selection:** Select the applicable option in the live form.
+## Form description
 
-## Description for the submission form
-
-ScamShield is a human-reviewed invoice-risk prototype. In the local fixture-mode walkthrough, a person selects or uploads a synthetic invoice, reviews candidate fields, chooses a known vendor record and requests an assessment. Deterministic rules compare the confirmed destination with vendor details and transaction history. The policy returns continue, verify or review with visible evidence and missing checks. No payment is executed. Live Gemini extraction is unverified. Firebase Auth and Firestore code are implemented, but live credentials and persistence checks remain unverified; Cloud Run deployment is pending credit coverage. All sample data is synthetic.
-
-**Character count:** 667 / 1,024 maximum.
+ScamShield helps a person review invoice payment details before a simulated assessment. It extracts candidate fields from an invoice, asks the person to confirm them, then compares the destination account with a known vendor record and surfaces anomalies or missing checks. Deterministic policy returns Continue, Verify or Review with evidence. When requested, Gemini prioritizes saved evidence and deterministic templates render the explanation. The app does not move money. The public prototype uses Firebase anonymous authentication, Firestore, Cloud Run and Vertex AI Gemini 2.5 Flash-Lite. Two synthetic invoice flows completed live: a routine invoice returned Continue, while a changed destination with bypass language returned Review. Sample invoices are synthetic.
 
 ## Submission requirements and current status
 
-- Prescribed AI Builder Cup template copied to the connected Drive account; the original remains untouched.
-- Local invoice review: verified with a saved synthetic fixture. The screenshot shows fixture mode, not live Gemini extraction.
-- Tests: 52 backend tests pass in the current release check. This is software verification, not a fraud-performance measure.
-- Firebase Auth and Firestore: implemented; live credentials and hosted persistence remain unverified.
-- Cloud Run deployment: pending credit coverage and deployment checks.
-- Public GCP / Cloud Run product URL: pending deployment and anonymous-browser verification.
-- Public GitHub repository URL: pending confirmation and public-access verification.
-- Demo video: pending recording. The current form asks for 3–4 minutes.
-- No external submission has been made.
+- Public repository: https://github.com/NikhilBudaniya/scamshield
+- Public Cloud Run app: https://scamshield-304420617883.us-central1.run.app
+- Demo video (3:03): https://github.com/NikhilBudaniya/scamshield/releases/download/hackathon-prototype/scamshield-demo.mp4
+- Tests: 59 backend tests passed in the current release check. They verify software behavior, not fraud-detection performance.
+- Cloud Run service: deployed and publicly reachable at the URL above.
+- Live service check: two synthetic invoice flows completed with live Vertex Gemini extraction and contextual classification. A requested explanation used Gemini-ranked evidence and deterministic templates. One case returned Continue; the changed destination case returned Review.
+- Firestore check: case readback and retry idempotency passed. Both cases remained available across a Cloud Run revision change. Visitor isolation returned 404 for a cross-owner lookup; unauthenticated API access returned 401, and direct browser reads from Firestore returned 403.
+- No submission has been made through the external form.
 
-## Technical and cost language
+## Product and architecture
 
-The local app uses synthetic INR consumer and invoice forms, FastAPI, SQLite, fixture-first providers and a shared policy engine. Its invoice walkthrough uses a saved fixture. Gemini extraction with human confirmation is the intended live path; it has not been verified. Firebase Auth and Firestore code are implemented, while live credentials and persistence checks remain unverified. Cloud Run deployment is pending credit coverage.
+ScamShield accepts a synthetic invoice, extracts candidate vendor, invoice, amount and destination fields, and waits for a person to review and confirm them. The assessment compares the confirmed destination with known vendor details and transaction evidence. Deterministic policy produces Continue, Verify or Review and retains the supporting signals and missing checks. When requested separately, Gemini prioritizes recorded evidence and deterministic templates render an explanation. The simulator moves no money.
 
-Gemini Developer API free-tier quota may apply to eligible models, subject to current eligibility, rate limits and data-use terms. Google’s pricing page says free-tier content may be used to improve Google products; use synthetic data only. Cloud usage and quotas depend on project configuration. No paid services are provisioned and no cost estimate is available. Reference: [Gemini API pricing](https://ai.google.dev/gemini-api/docs/pricing), checked 18 October 2026.
+The deployed stack is a React and TypeScript client served with FastAPI on Cloud Run, Firebase anonymous authentication, Firestore for owner-scoped case records and quota state, and Vertex AI Gemini 2.5 Flash-Lite for extraction, context classification and evidence prioritization. Deterministic templates render requested explanations. The runtime restricts model attempts to 9 per user per day, 50 globally per day and 200 total. These are request limits, not billing caps.
 
-## Claims to keep out until measured
+## Cost and data limits
 
-Do not claim that the prototype prevents fraud, executes payments, has verified live Gemini behavior, or achieves specific accuracy or latency. The current release check reports 52 passing backend tests. A historical 40-case synthetic policy evaluation used curated fixture outputs. Neither establishes live-model or real-world fraud performance.
+Project billing is enabled. A ₹100 budget alert is configured through 6 November 2026. Budget alerts notify; they do not stop charges. No credit coverage is confirmed, so live Cloud Run, Firestore and Vertex AI usage may incur charges. Keep demo inputs synthetic and avoid real invoices or bank details. Upload size limits and provider status should be shown as implemented in the deployed build before making claims about them.
+
+## Claims to keep out
+
+Do not claim that ScamShield prevents fraud, executes payments, or achieves a particular accuracy or latency. The 59-test count is a backend regression result, not an AI benchmark. The two live synthetic flows verify this release path, not real-world fraud performance. Do not call the ₹100 budget a spending cap.

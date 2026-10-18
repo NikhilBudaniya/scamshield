@@ -13,7 +13,7 @@ import path from 'node:path';
 
 export const TEMPLATE_ID = '13rg7vW43mEH6DkpuusAE6fdoEylSFz8waNpE4RLzoUg';
 export const COPY_ID = '1FPicCNALBcWR8fb2YpirQG655ZgGD-JJlxRr6I45Wfs';
-export const VIDEO_URL = 'https://github.com/NikhilBudaniya/scamshield/releases/download/hackathon-prototype/scamshield-demo.mp4';
+export const VIDEO_URL = 'https://www.loom.com/share/76e58b695b58433f998c84a59b3d0d2b';
 
 const ids = {
   cover: 'p',
@@ -99,7 +99,7 @@ const bodySlides = [
   },
   {
     slideId: ids.cost, objectId: 'ssbody10', size: 13,
-    text: `CLOUD COST STATUS\nCloud Run, Firestore and Vertex AI calls may incur charges. Credit coverage is unconfirmed.\n\nA ₹100 project budget alert is configured through 6 November 2026. Alerts notify; they do not stop spending.\n\nMODEL REQUEST LIMITS\n9 attempts per visitor per day · 50 globally per day · 200 total. These restrict model calls and are not a billing cap.\n\nUse synthetic invoice data only.`,
+    text: `CLOUD COST STATUS\nCloud Run, Firestore and Vertex AI calls may incur charges. Credit coverage is unconfirmed.\n\nMODEL REQUEST LIMITS\n9 attempts per visitor per day · 50 globally per day · 200 total. These restrict model calls and are not a billing cap.\n\nUse synthetic invoice data only.`,
   },
   {
     slideId: ids.snapshots, objectId: 'ssbody11', size: 14,
@@ -115,7 +115,7 @@ const bodySlides = [
   },
   {
     slideId: ids.links, objectId: 'ssbody14', size: 14, top: 126,
-    text: `Public repository\nhttps://github.com/NikhilBudaniya/scamshield\n\nLive Cloud Run app\nhttps://scamshield-304420617883.us-central1.run.app\n\n3:03 demo video\nWatch demo video (3:03)\n\nUse synthetic examples only. No payment is executed.`,
+    text: `Public repository\nhttps://github.com/NikhilBudaniya/scamshield\n\nLive Cloud Run app\nhttps://scamshield-304420617883.us-central1.run.app\n\nDemo video\nWatch recorded demo\n\nUse synthetic examples only. No payment is executed.`,
   },
 ];
 
@@ -292,10 +292,17 @@ export function buildRequests() {
     requests.push({ deleteObject: { objectId: body.objectId } });
     requests.push(...createBodyRequests(body));
   }
-  const demoLabel = 'Watch demo video (3:03)';
   const demoText = bodySlides.find(body => body.slideId === ids.links).text;
-  const demoStart = demoText.indexOf(demoLabel);
-  requests.push({ updateTextStyle: { objectId: 'ssbody14', textRange: { type: 'FIXED_RANGE', startIndex: demoStart, endIndex: demoStart + demoLabel.length }, style: { link: { url: VIDEO_URL }, underline: true, foregroundColor: { opaqueColor: { rgbColor: { red: 0.08, green: 0.26, blue: 0.55 } } } }, fields: 'link,underline,foregroundColor' } });
+  const linkedSubmissionText = [
+    ['https://github.com/NikhilBudaniya/scamshield', 'https://github.com/NikhilBudaniya/scamshield'],
+    ['https://scamshield-304420617883.us-central1.run.app', 'https://scamshield-304420617883.us-central1.run.app'],
+    ['Watch recorded demo', VIDEO_URL],
+  ];
+  for (const [visibleText, url] of linkedSubmissionText) {
+    const startIndex = demoText.indexOf(visibleText);
+    requests.push({ updateTextStyle: { objectId: 'ssbody14', textRange: { type: 'FIXED_RANGE', startIndex, endIndex: startIndex + visibleText.length }, style: { link: { url }, underline: true, foregroundColor: { opaqueColor: { rgbColor: { red: 0.08, green: 0.26, blue: 0.55 } } } }, fields: 'link,underline,foregroundColor' } });
+    requests.push({ updateTextStyle: { objectId: 'ssbody14', textRange: { type: 'FIXED_RANGE', startIndex: startIndex + visibleText.length, endIndex: startIndex + visibleText.length + 1 }, style: { link: null, underline: false }, fields: 'link,underline' } });
+  }
 
   // Rebuild existing editable diagrams and replace the former repetitive flow sketch.
   for (const id of ['ssflow01','ssflow02','ssflow03','ssflow04','ssflow05','ssflow06','ssflowoptional01','ssflowoptional02','ssflowfoot','ssflowarrow1','ssflowarrow2','ssflowarrow3','ssflowarrow4','ssflowarrow5','ssflowoptionalarrow']) requests.push({ deleteObject: { objectId: id } });
@@ -353,7 +360,7 @@ export function buildRequests() {
     insertText: {
       objectId: 'g3fb085bff3c_0_45',
       insertionIndex: 0,
-      text: 'ScamShield uses Vertex AI Gemini 2.5 Flash-Lite, Firebase Authentication, Firestore and Cloud Run. The ₹100 budget alert through 6 Nov 2026 is not a spending cap. 59 backend tests passed. Live synthetic invoice checks covered extraction, classification, requested explanation, Firestore reads, idempotency, restart durability and visitor isolation. Use synthetic data only.',
+      text: 'ScamShield uses Vertex AI Gemini 2.5 Flash-Lite, Firebase Authentication, Firestore and Cloud Run. 59 backend tests passed. Live synthetic invoice checks covered extraction, classification, requested explanation, Firestore reads, idempotency, restart durability and visitor isolation. Use synthetic data only.',
     },
   });
   requests.push({ insertText: { objectId: 'g3fb085bff3c_0_40', insertionIndex: 0, text: 'TypeSafe describes Jev as a structured probabilistic decision model intended to emit actionable structured decisions. ScamShield’s adapter passes fixture tests but is disabled on live GCP. Jev has no measured latency or quality result in this project. https://typesafe.ai/blog/introducing-system-one-models-and-jev' } });

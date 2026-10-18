@@ -2,8 +2,8 @@
 
 **Team:** pulse
 **Team leader:** Nikhil Kumar
-**Challenge selection:** Choose the applicable option in the live form.
-**Submission status:** Public app, repository and 3:03 demo video are public. Full synthetic invoice smoke checks passed on Cloud Run revision 3.
+**Challenge selection:** BFSI: Intelligent Risk, Fraud & Financial Experiences.
+**Submission status:** User confirmed submission on 18 October 2026. Public app, repository and recorded Loom demo are available.
 **Observed deadline:** 18 October 2026, 23:59 IST.
 
 ## Form description
@@ -14,12 +14,12 @@ ScamShield combines AI classification of invoice payment requests with determini
 
 - Public repository: https://github.com/NikhilBudaniya/scamshield
 - Public Cloud Run app: https://scamshield-304420617883.us-central1.run.app
-- Demo video (3:03): https://github.com/NikhilBudaniya/scamshield/releases/download/hackathon-prototype/scamshield-demo.mp4
+- Demo video: https://www.loom.com/share/76e58b695b58433f998c84a59b3d0d2b
 - Tests: 59 backend tests passed in the current release check. They verify software behavior, not fraud-detection performance.
 - Cloud Run service: deployed and publicly reachable at the URL above.
 - Live service check: two synthetic invoice flows completed with live Vertex Gemini extraction and contextual classification. A requested explanation used Gemini-ranked evidence and deterministic templates. One case returned Continue; the changed destination case returned Review.
 - Firestore check: case readback and retry idempotency passed. Both cases remained available across a Cloud Run revision change. Visitor isolation returned 404 for a cross-owner lookup; unauthenticated API access returned 401, and direct browser reads from Firestore returned 403.
-- No submission has been made through the external form.
+- User confirmed that the Hack2skill submission was completed on 18 October 2026.
 
 ## Product and architecture
 
@@ -33,8 +33,8 @@ UK Finance's [Fraud Report 2026](https://www.ukfinance.org.uk/system/files/2026-
 
 ## Cost and data limits
 
-Project billing is enabled. A ₹100 budget alert is configured through 6 November 2026. Budget alerts notify; they do not stop charges. No credit coverage is confirmed, so live Cloud Run, Firestore and Vertex AI usage may incur charges. Keep demo inputs synthetic and avoid real invoices or bank details. Upload size limits and provider status should be shown as implemented in the deployed build before making claims about them.
+Project billing is enabled. No credit coverage is confirmed, so live Cloud Run, Firestore and Vertex AI usage may incur charges. Keep demo inputs synthetic and avoid real invoices or bank details. Upload size limits and provider status should be shown as implemented in the deployed build before making claims about them.
 
 ## Claims to keep out
 
-Do not claim that ScamShield prevents fraud, executes payments, or achieves a particular accuracy or latency. The 59-test count is a backend regression result, not an AI benchmark. The two live synthetic flows verify this release path, not real-world fraud performance. Do not call the ₹100 budget a spending cap.
+Do not claim that ScamShield prevents fraud, executes payments, or achieves a particular accuracy or latency. The 59-test count is a backend regression result, not an AI benchmark. The two live synthetic flows verify this release path, not real-world fraud performance. Do not describe project budget alerts as spending caps.

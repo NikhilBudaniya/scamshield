@@ -4,7 +4,7 @@ ScamShield is a synthetic invoice-payment review prototype. A visitor can upload
 
 Try the [public prototype](https://scamshield-304420617883.us-central1.run.app). It runs on Cloud Run with Firebase anonymous authentication, Firestore, and Vertex AI Gemini 2.5 Flash-Lite. Two synthetic invoice flows were verified end to end on 18 October 2026. The local fixture workflow is also available without cloud credentials or model calls.
 
-The [submission release](https://github.com/NikhilBudaniya/scamshield/releases/tag/hackathon-prototype) contains the 3:03 edited product walkthrough and the prescribed pitch deck. The walkthrough uses actual deployed-app captures and generated narration.
+The [recorded demo](https://www.loom.com/share/76e58b695b58433f998c84a59b3d0d2b) shows the deployed app using synthetic invoices. The [submission release](https://github.com/NikhilBudaniya/scamshield/releases/tag/hackathon-prototype) contains the prescribed pitch deck.
 
 ## Local offline demo
 
@@ -87,4 +87,4 @@ npm run check:copy
 npm run build
 ```
 
-The 40-case evaluation is a fixture-based policy regression set split into disjoint development and held-out families. It does not measure classifier accuracy or live model performance. The current release has 59 passing backend tests and two live synthetic integration cases. Neither is a real-world fraud benchmark. The public demo has bounded model quotas; exhausted quotas return an explicit error. A ₹100 project budget alert covers the evaluation period through 6 November; alerts do not enforce a spending cutoff.
+The 40-case evaluation is a fixture-based policy regression set split into disjoint development and held-out families. It does not measure classifier accuracy or live model performance. The current release has 59 passing backend tests and two live synthetic integration cases. Neither is a real-world fraud benchmark. The public demo has bounded model quotas; exhausted quotas return an explicit error.
